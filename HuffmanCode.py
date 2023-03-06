@@ -12,6 +12,7 @@ class Huffman_code:
         self.sequence = sequence
         self.stats = []
         self.root = None
+        self.codes = dict()
 
     def calculate_probabities(self):
         for symbola in set(self.sequence):
@@ -36,8 +37,34 @@ class Huffman_code:
         try:
             if root.is_leaf:
                 root.code = code
+                self.codes[root.symbol] = root.code
             self.get_codes(root.left_children, code=code + '0')
             self.get_codes(root.right_children, code=code + '1')
 
         except AttributeError:
             None
+
+    def calculate_encode(self):
+        result = ''
+        self.calculate_probabities()
+        self.create_tree()
+        self.get_codes(self.root)
+        for element in self.sequence:
+            result = result + self.codes[element]
+        return result
+
+    def huffman_decode(self, code):
+        current_node = self.root
+        decoded_string = ""
+
+        for bit in code:
+            if bit == "0":
+                current_node = current_node.left_children
+            else:
+                current_node = current_node.right_children
+
+            if current_node.is_leaf:
+                decoded_string += current_node.symbol
+                current_node = self.root
+
+        return decoded_string
