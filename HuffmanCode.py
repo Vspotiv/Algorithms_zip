@@ -18,7 +18,6 @@ class Huffman_code:
         for symbola in set(self.sequence):
             self.stats.append(Node(value = self.sequence.count(symbola), symbol=symbola, is_leaf=True))
         self.stats = sorted(self.stats, key=lambda x: x.value, reverse=True)
-        self.leaves = self.stats
 
     def create_tree(self):
         while len(self.stats) != 1:
