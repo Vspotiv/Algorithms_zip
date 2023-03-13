@@ -10,7 +10,6 @@ class LZ77:
         code = []
         while read < length_data:
             offset, length, next, buffer, read = self.best_matches_compress(text, buffer, read)
-            read += 1
             code.append((offset, length, next))
         return code
     
@@ -23,14 +22,13 @@ class LZ77:
             length = len(buffer[index:])
             if not i[0]:
                 message += i[2]
-                buffer = (buffer + i[2])[-self.buffer_length:]
+                buffer = message[-self.buffer_length:]
             else:
                 if length > i[1]:
                     message += buffer[index:to_end] + i[2]
                     buffer = message[-self.buffer_length:]
                 else:
-                    repetition = buffer[index:]
-                    repetition = (int(i[1] / length) + 1)*repetition
+                    repetition = (int(i[1] / length) + 1) * buffer[index:]
                     message += repetition[:i[1]] + i[2]
                     buffer = message[-self.buffer_length:]
         return message
@@ -66,10 +64,9 @@ class LZ77:
                         len_rep = len(repetition)
                     else:
                         break
-            return (offset, length, next, (buffer + message)[-self.buffer_length:], position)
         except IndexError:
             next = ''
-            return (offset, length, next, (buffer + message)[-self.buffer_length:], position)
+        return (offset, length, next, (buffer + message)[-self.buffer_length:], position + 1)
 
 
 if __name__ == '__main__':
