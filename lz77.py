@@ -1,4 +1,3 @@
-import re
 import time
 class LZ77:
     def __init__(self, buffer_length = 10, lookahead = 150):
@@ -18,22 +17,24 @@ class LZ77:
     
     def decompress(self, code):
         buffer = ''
-        massage = ''
+        message = ''
         for i in code:
             index = len(buffer) - i[0]
+            to_end = index + i[1]
+            length = len(buffer[index:])
             if not i[0]:
-                massage += i[2]
+                message += i[2]
                 buffer = (buffer + i[2])[-self.buffer_length:]
             else:
-                if len(buffer[index:]) > i[1]:
-                    massage += buffer[index:i[1]+index] + i[2]
-                    buffer = (buffer + buffer[index:i[1]+index] + i[2])[-self.buffer_length:]
+                if length > i[1]:
+                    message += buffer[index:to_end] + i[2]
+                    buffer = message[-self.buffer_length:]
                 else:
                     repetition = buffer[index:]
-                    repetition = (int(i[1] / len(repetition)) + 1)*repetition
-                    massage += repetition[:i[1]] + i[2]
-                    buffer = (buffer + repetition[:i[1]] + i[2])[-self.buffer_length:]
-        return massage
+                    repetition = (int(i[1] / length) + 1)*repetition
+                    message += repetition[:i[1]] + i[2]
+                    buffer = message[-self.buffer_length:]
+        return message
 
     def best_matches_compress (self, data, buffer, position):
         offset = 0
@@ -76,15 +77,11 @@ if __name__ == '__main__':
     lz = LZ77(100)
     with open("test_documents/sample-2mb-text-file.txt") as file:
         data = file.read()
-    # data = 'hellothere'
     start_comp = time.time()
     compressed = lz.compress(data)
-    # print(compressed)
     end_comp = time.time()
-    # start_decomp = time.time()
+    start_decomp = time.time()
     decompressed = lz.decompress(compressed)
-    # print(decompressed)
-    # end_decomp = time.time()
-    # print(data == decompressed)
+    end_decomp = time.time()
     print(decompressed == data)
-    print(end_comp-start_comp, len(compressed))
+    print(end_comp-start_comp, end_decomp - start_decomp, len(compressed))
