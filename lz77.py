@@ -1,8 +1,7 @@
 import time
 class LZ77:
-    def __init__(self, buffer_length = 10, lookahead = 150):
+    def __init__(self, buffer_length = 10):
         self.buffer_length = buffer_length
-        self.lookahead = lookahead
 
     def compress(self, text):
         read = 0
