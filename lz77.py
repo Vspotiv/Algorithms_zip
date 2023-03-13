@@ -6,10 +6,13 @@ class LZ77:
         self.lookahead = lookahead
 
     def compress(self, text):
+        read = 0
+        length_data = len(text)
         buffer = ''
         code = []
-        while text:
-            text, offset, length, next, buffer = self.best_matches_compress(text, buffer)
+        while read < length_data:
+            offset, length, next, buffer, read = self.best_matches_compress(text, buffer, read)
+            read += 1
             code.append((offset, length, next))
         return code
     
@@ -32,47 +35,56 @@ class LZ77:
                     buffer = (buffer + repetition[:i[1]] + i[2])[-self.buffer_length:]
         return massage
 
-    def best_matches_compress (self, data, buffer):
+    def best_matches_compress (self, data, buffer, position):
         offset = 0
         length = 0
-        next = data[0]
-        repetition = ''
+        buf_len = len(buffer)
         index = 0
+        message = ''
+        next = data[position]
         try:
-            for i in range(1, self.lookahead):
-                if index + i > len(buffer):
+            while True:
+                message += next
+                if index + length > buf_len:
                     if repetition:
-                        repetition = repetition * (int(self.lookahead / len(repetition)) + 1)
-                        if repetition[:i] == data[:i]:
-                            length = i
-                            next = data[i]
+                        if repetition[length % len_rep] == data[position]:
+                            length += 1
+                            position += 1
+                            next = data[position]
                         else:
                             break 
                     else:
                         break     
                 else:
-                    if data[:i] in buffer:
-                        index = buffer.index(data[:i])
-                        repetition = buffer[index : index + i]
-                        offset = len(buffer) - index
-                        length = i
-                        next = data[i]
+                    if message in buffer:
+                        index = buffer.index(message)
+                        offset = buf_len - index
+                        length += 1
+                        position += 1
+                        next = data[position]
+                        repetition = buffer[index:]
+                        len_rep = len(repetition)
                     else:
                         break
-            return (data[i:], offset, length, next, (buffer + data[:i])[-self.buffer_length:])
+            return (offset, length, next, (buffer + message)[-self.buffer_length:], position)
         except IndexError:
             next = ''
-            return (data[i:], offset, length, next, (buffer + data[:i])[-self.buffer_length:])
+            return (offset, length, next, (buffer + message)[-self.buffer_length:], position)
+
 
 if __name__ == '__main__':
-    lz = LZ77(20, 250)
-    with open("test_documents/sample-75kb-text-file.txt") as file:
+    lz = LZ77(100)
+    with open("test_documents/sample-2mb-text-file.txt") as file:
         data = file.read()
+    # data = 'hellothere'
     start_comp = time.time()
     compressed = lz.compress(data)
+    # print(compressed)
     end_comp = time.time()
-    start_decomp = time.time()
+    # start_decomp = time.time()
     decompressed = lz.decompress(compressed)
-    end_decomp = time.time()
-    print(data == decompressed)
-    print(end_comp-start_comp, end_decomp-start_decomp)
+    # print(decompressed)
+    # end_decomp = time.time()
+    # print(data == decompressed)
+    print(decompressed == data)
+    print(end_comp-start_comp, len(compressed))
